@@ -29,7 +29,7 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
     # print(device)
 
     image_resolution = ast.literal_eval(image_resolution)
-    has_display = 'DISPLAY' in os.environ.keys() or sys.platform == 'win32'
+    has_display = True
     video_writer = None
 
     if filename is not None:
@@ -39,6 +39,7 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
     else:
         rotation_code = None
         if disable_vidgear:
+            print('hey 42')
             video = cv2.VideoCapture(camera_id)
             assert video.isOpened()
         else:
@@ -83,6 +84,7 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
         device=device,
         enable_tensorrt=enable_tensorrt
     )
+    print("hey 87")
 
     if not disable_tracking:
         prev_boxes = None
@@ -107,6 +109,7 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
                 break
 
         pts = model.predict(frame)
+        print("hey 112")
 
         if not disable_tracking:
             boxes, pts = pts
@@ -132,10 +135,14 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
         else:
             person_ids = np.arange(len(pts), dtype=np.int32)
 
+        print("hey 138")
+
         for i, (pt, pid) in enumerate(zip(pts, person_ids)):
             frame = draw_points_and_skeleton(frame, pt, joints_dict()[hrnet_joints_set]['skeleton'], person_index=pid,
                                              points_color_palette='gist_rainbow', skeleton_color_palette='jet',
                                              points_palette_samples=10)
+            
+        print("hey 145")
 
         # for box in boxes:
         #     cv2.rectangle(frame,(box[0],box[1]),(box[2],box[3]),(255,255,255),2)
@@ -156,7 +163,9 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
             cv2.imwrite('frame.png', frame)
 
         if save_video:
+            print("hey 159")
             if video_writer is None:
+                print("hey 160")
                 fourcc = cv2.VideoWriter_fourcc(*video_format)  # video format
                 video_writer = cv2.VideoWriter('output.avi', fourcc, video_framerate, (frame.shape[1], frame.shape[0]))
             video_writer.write(frame)
@@ -175,7 +184,7 @@ if __name__ == '__main__':
                                                 "resnet size (if model is PoseResNet)", type=int, default=48)
     parser.add_argument("--hrnet_j", "-j", help="hrnet parameters - number of joints", type=int, default=17)
     parser.add_argument("--hrnet_weights", "-w", help="hrnet parameters - path to the pretrained weights",
-                        type=str, default="./weights/pose_hrnet_w48_384x288.pth")
+                        type=str, default="pretrained/pose_hrnet_w48_384x288.pth")
     parser.add_argument("--hrnet_joints_set",
                         help="use the specified set of joints ('coco' and 'mpii' are currently supported)",
                         type=str, default="coco")
@@ -190,16 +199,16 @@ if __name__ == '__main__':
     parser.add_argument("--use_tiny_yolo",
                         help="Use YOLOv3-tiny in place of YOLOv3 (faster person detection) if `yolo_version` is `v3`."
                              "Use YOLOv5n(ano) in place of YOLOv5m(edium) if `yolo_version` is `v5`."
-                             "Ignored if --single_person",
+                             "Ignored if --single_person", default=True,
                         action="store_true")
     parser.add_argument("--disable_tracking",
                         help="disable the skeleton tracking and temporal smoothing functionality",
                         action="store_true")
     parser.add_argument("--max_batch_size", help="maximum batch size used for inference", type=int, default=16)
     parser.add_argument("--disable_vidgear",
-                        help="disable vidgear (which is used for slightly better realtime performance)",
+                        help="disable vidgear (which is used for slightly better realtime performance)", default=True,
                         action="store_true")  # see https://pypi.org/project/vidgear/
-    parser.add_argument("--save_video", help="save output frames into a video.", action="store_true")
+    parser.add_argument("--save_video", help="save output frames into a video.", action="store_true", default=True)
     parser.add_argument("--video_format", help="fourcc video format. Common formats: `MJPG`, `XVID`, `X264`."
                                                "See http://www.fourcc.org/codecs.php", type=str, default='MJPG')
     parser.add_argument("--video_framerate", help="video framerate", type=float, default=30)

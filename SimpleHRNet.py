@@ -132,6 +132,8 @@ class SimpleHRNet:
                     print("GPU(s) '%s' will be used" % str(self.device))
                     device_ids = [int(x) for x in str(self.device)[5:].split(',')]
 
+                # torch.onnx.export(self.model, torch.randn((1, 3, 384, 288)), 'pretrained/simplehrnet_nov23.onnx', opset_version=11)
+                # print("simplehrnet_crt done--------------------*****************************")
                 self.model = torch.nn.DataParallel(self.model, device_ids=device_ids)
             elif 'cpu' == str(self.device):
                 print("device: 'cpu'")

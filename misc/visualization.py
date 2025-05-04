@@ -68,7 +68,7 @@ def joints_dict():
     return joints
 
 
-def draw_points(image, points, color_palette='tab20', palette_samples=16, confidence_threshold=0.5):
+def draw_points(image, points, color_palette='tab20', palette_samples=16, confidence_threshold=0.5, posture=None):
     """
     Draws `points` on `image`.
 
@@ -100,15 +100,19 @@ def draw_points(image, points, color_palette='tab20', palette_samples=16, confid
     circle_size = max(1, min(image.shape[:2]) // 160)  # ToDo Shape it taking into account the size of the detection
     # circle_size = max(2, int(np.sqrt(np.max(np.max(points, axis=0) - np.min(points, axis=0)) // 16)))
 
+    color = (0, 0, 255) if posture=='wrong' else (0, 255, 0)
     for i, pt in enumerate(points):
         if pt[2] > confidence_threshold:
-            image = cv2.circle(image, (int(pt[1]), int(pt[0])), circle_size, tuple(colors[i % len(colors)]), -1)
+            if posture is None:
+                image = cv2.circle(image, (int(pt[1]), int(pt[0])), circle_size, tuple(colors[i % len(colors)]), -1)
+            else:
+                image = cv2.circle(image, (int(pt[1]), int(pt[0])), circle_size, color, -1)
 
     return image
 
 
 def draw_skeleton(image, points, skeleton, color_palette='Set2', palette_samples=8, person_index=0,
-                  confidence_threshold=0.5):
+                  confidence_threshold=0.5, posture=None):
     """
     Draws a `skeleton` on `image`.
 
@@ -142,20 +146,27 @@ def draw_skeleton(image, points, skeleton, color_palette='Set2', palette_samples
             np.array(plt.get_cmap(color_palette)(np.linspace(0, 1, palette_samples))) * 255
         ).astype(np.uint8)[:, -2::-1].tolist()
 
+    color = (0, 0, 255) if posture=='wrong' else (0, 255, 0)
     for i, joint in enumerate(skeleton):
         pt1, pt2 = points[joint]
         if pt1[2] > confidence_threshold and pt2[2] > confidence_threshold:
-            image = cv2.line(
-                image, (int(pt1[1]), int(pt1[0])), (int(pt2[1]), int(pt2[0])),
-                tuple(colors[person_index % len(colors)]), 2
-            )
+            if posture is None:
+                image = cv2.line(
+                    image, (int(pt1[1]), int(pt1[0])), (int(pt2[1]), int(pt2[0])),
+                    tuple(colors[person_index % len(colors)]), 2
+                )
+            else:
+                image = cv2.line(
+                    image, (int(pt1[1]), int(pt1[0])), (int(pt2[1]), int(pt2[0])),
+                    color, 2
+                )
 
     return image
 
 
 def draw_points_and_skeleton(image, points, skeleton, points_color_palette='tab20', points_palette_samples=16,
                              skeleton_color_palette='Set2', skeleton_palette_samples=8, person_index=0,
-                             confidence_threshold=0.5):
+                             confidence_threshold=0.5, posture=None):
     """
     Draws `points` and `skeleton` on `image`.
 
@@ -186,9 +197,9 @@ def draw_points_and_skeleton(image, points, skeleton, points_color_palette='tab2
     """
     image = draw_skeleton(image, points, skeleton, color_palette=skeleton_color_palette,
                           palette_samples=skeleton_palette_samples, person_index=person_index,
-                          confidence_threshold=confidence_threshold)
+                          confidence_threshold=confidence_threshold, posture=posture)
     image = draw_points(image, points, color_palette=points_color_palette, palette_samples=points_palette_samples,
-                        confidence_threshold=confidence_threshold)
+                        confidence_threshold=confidence_threshold, posture=posture)
     return image
 
 
